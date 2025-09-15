@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import emailjs from "@emailjs/browser";
 
 export default function ContactPage() {
@@ -8,28 +8,64 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  // Initialize EmailJS once when the public key exists
+  useEffect(() => {
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY as string | undefined;
+    if (publicKey) {
+      try {
+        emailjs.init({ publicKey });
+      } catch {
+        // no-op: init is optional since we pass publicKey on send
+      }
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("sending");
+    setErrorMessage("");
     try {
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID as string,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID as string,
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID as string | undefined;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID as string | undefined;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY as string | undefined;
+
+      if (!serviceId || !templateId || !publicKey) {
+        const missing: string[] = [];
+        if (!serviceId) missing.push("NEXT_PUBLIC_EMAILJS_SERVICE_ID");
+        if (!templateId) missing.push("NEXT_PUBLIC_EMAILJS_TEMPLATE_ID");
+        if (!publicKey) missing.push("NEXT_PUBLIC_EMAILJS_PUBLIC_KEY");
+        throw new Error(
+          `Configuração do EmailJS ausente: ${missing.join(", ")}. ` +
+          `Crie/edite .env.local e reinicie o servidor (npm run dev).`
+        );
+      }
+
+      const response = await emailjs.send(
+        serviceId,
+        templateId,
         {
           from_name: name,
           from_email: email,
           message,
+          to_email: "diegocostalevelup@gmail.com",
+          subject: `AudioVisualMessage`,
         },
         {
-          publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY as string,
+          publicKey,
         }
       );
+      if (response.status !== 200) {
+        throw new Error(`EmailJS retornou status ${response.status}: ${response.text}`);
+      }
       setStatus("sent");
       setName("");
       setEmail("");
       setMessage("");
-    } catch (err) {
+    } catch (err: any) {
+      console.error("EmailJS error", err);
+      setErrorMessage(err?.message || err?.text || "Falha ao enviar mensagem");
       setStatus("error");
     }
   }
@@ -81,7 +117,7 @@ export default function ContactPage() {
             <p className="text-sm text-green-600">Mensagem enviada com sucesso!</p>
           )}
           {status === "error" && (
-            <p className="text-sm text-red-600">Ocorreu um erro. Tente novamente.</p>
+            <p className="text-sm text-red-600">Ocorreu um erro. Tente novamente. {errorMessage && `(${errorMessage})`}</p>
           )}
         </form>
       </section>
@@ -96,7 +132,7 @@ export default function ContactPage() {
             <a className="hover:underline" href="https://www.linkedin.com/in/diego-dacosta" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </li>
           <li>
-            <a className="hover:underline" href="www.instagram.com/eldiegodacosta" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a className="hover:underline" href="https://www.instagram.com/eldiegodacosta" target="_blank" rel="noopener noreferrer">Instagram</a>
           </li>
           <li>
             <a className="hover:underline" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">Proximamente: YouTube</a>

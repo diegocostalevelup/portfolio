@@ -25,8 +25,22 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Rintvera font (place Rintvera.woff2 in public/fonts) */
+@font-face {
+  font-family: 'Rintvera';
+  src: url('/fonts/Rintvera.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+.rintvera {
+  font-family: 'Rintvera', var(--font-geist-sans), system-ui, sans-serif;
+}
+
 /* Animated galaxy background: subtle, slow, ~35% opacity */
-.galaxy-bg {
+/* Galaxy background moved to body::before to avoid hydration diffs */
+body::before {
+  content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
@@ -37,7 +51,7 @@ body {
               radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.6), transparent 40%),
               #000;
   filter: saturate(0.8) blur(0.3px);
-  animation: drift 60s linear infinite;
+  animation: drift 48s linear infinite;
 }
 
 @keyframes drift {
