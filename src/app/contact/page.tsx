@@ -63,9 +63,12 @@ export default function ContactPage() {
       setName("");
       setEmail("");
       setMessage("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("EmailJS error", err);
-      setErrorMessage(err?.message || err?.text || "Falha ao enviar mensagem");
+      const errorMessage = err instanceof Error ? err.message : 
+        (err && typeof err === 'object' && 'text' in err && typeof err.text === 'string') ? err.text :
+        "Falha ao enviar mensagem";
+      setErrorMessage(errorMessage);
       setStatus("error");
     }
   }
