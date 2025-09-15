@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Seu Nome — Portfólio",
+  title: "Diego Gabriel da Costa — Portfólio",
   description: "Portfólio minimalista de vídeos",
   icons: {
     icon: [
